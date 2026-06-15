@@ -31,6 +31,14 @@
     <section class="game-layout" aria-label="Chess game area">
       <div class="board-card">
         <div id="board" class="board" aria-label="Interactive chessboard"></div>
+        <div class="eval-bar-container" aria-label="Position evaluation">
+          <div class="eval-bar">
+            <div id="evalFill" class="eval-fill" style="width: 50%;"></div>
+          </div>
+          <div class="eval-text">
+            <span id="evalScore">0.0</span>
+          </div>
+        </div>
       </div>
 
       <aside class="panel-card" aria-label="Game information">

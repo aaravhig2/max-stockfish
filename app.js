@@ -9,16 +9,37 @@
   const moveLogElement = document.getElementById('moveLog');
   const newGameButton = document.getElementById('newGameButton');
   const copyFenButton = document.getElementById('copyFenButton');
+  const evalFill = document.getElementById('evalFill');
+  const evalScore = document.getElementById('evalScore');
 
   let game = new Chess();
   let board;
   let engine;
   let engineReady = false;
   let engineThinking = false;
+  let currentEval = 0;
 
   function setStatus(message, state = 'ready') {
     statusElement.textContent = message;
     statusElement.className = `status ${state}`;
+  }
+
+  function updateEvaluationBar(evaluation) {
+    currentEval = evaluation;
+    
+    // Clamp evaluation between -10 and +10 for display
+    const clampedEval = Math.max(-10, Math.min(10, evaluation));
+    // Convert to percentage: 0 = black winning, 50 = equal, 100 = white winning
+    const percentage = ((clampedEval + 10) / 20) * 100;
+    
+    evalFill.style.width = percentage + '%';
+    
+    // Format display
+    if (Math.abs(evaluation) >= 10) {
+      evalScore.textContent = evaluation > 0 ? '∞' : '-∞';
+    } else {
+      evalScore.textContent = (Math.round(evaluation * 10) / 10).toFixed(1);
+    }
   }
 
   function updateTurnIndicator() {
@@ -78,6 +99,24 @@
   function handleEngineMessage(event) {
     const line = String(event.data || '').trim();
     if (!line) return;
+
+    // Parse evaluation from info line
+    if (line.startsWith('info') && line.includes('score')) {
+      const scoreMatch = line.match(/score (cp|mate) (-?\d+)/);
+      if (scoreMatch) {
+        if (scoreMatch[1] === 'cp') {
+          // Convert centipawns to pawns
+          let eval_val = parseInt(scoreMatch[2]) / 100;
+          // Flip if black to move
+          if (game.turn() === 'b') eval_val = -eval_val;
+          updateEvaluationBar(eval_val);
+        } else if (scoreMatch[1] === 'mate') {
+          // Mate score
+          const mateIn = parseInt(scoreMatch[2]);
+          updateEvaluationBar(mateIn > 0 ? 15 : -15);
+        }
+      }
+    }
 
     if (line === 'uciok') {
       sendEngineCommand('isready');
@@ -161,6 +200,7 @@
     sendEngineCommand('stop');
     sendEngineCommand('ucinewgame');
     sendEngineCommand('isready');
+    updateEvaluationBar(0);
     refreshUi();
     setStatus(engineReady ? 'Your turn' : 'Loading Stockfish...', engineReady ? 'ready' : 'thinking');
   }
@@ -180,5 +220,6 @@
 
   initializeBoard();
   initializeEngine();
+  updateEvaluationBar(0);
   refreshUi();
 })();
