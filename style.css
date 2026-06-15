@@ -1,0 +1,142 @@
+:root {
+  color-scheme: dark;
+  --bg: #090b12;
+  --card: rgba(18, 24, 38, 0.86);
+  --card-strong: rgba(24, 33, 52, 0.94);
+  --text: #f4f7fb;
+  --muted: #a9b4c7;
+  --accent: #65e4a3;
+  --accent-2: #80b7ff;
+  --danger: #ff7b7b;
+  --border: rgba(255, 255, 255, 0.12);
+  --shadow: 0 24px 80px rgba(0, 0, 0, 0.38);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(101, 228, 163, 0.18), transparent 34rem),
+    radial-gradient(circle at bottom right, rgba(128, 183, 255, 0.16), transparent 32rem),
+    linear-gradient(135deg, #070912 0%, #111827 55%, #07111c 100%);
+}
+
+.app-shell {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 32px 0;
+}
+
+.hero-card,
+.game-layout,
+.board-card,
+.panel-card {
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+
+.hero-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+  padding: 28px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, rgba(20, 28, 45, 0.92), rgba(9, 13, 24, 0.78));
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+h1 { margin: 0; font-size: clamp(2rem, 5vw, 4rem); line-height: 0.98; }
+.subtitle { max-width: 760px; margin: 14px 0 0; color: var(--muted); font-size: 1.05rem; line-height: 1.6; }
+code { color: #d7ffe8; }
+
+.game-layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 680px) minmax(280px, 1fr);
+  gap: 24px;
+  padding: 24px;
+  border-radius: 30px;
+  background: rgba(7, 10, 18, 0.42);
+}
+
+.board-card,
+.panel-card {
+  border-radius: 24px;
+  background: var(--card);
+}
+
+.board-card { display: grid; place-items: center; padding: clamp(12px, 2vw, 24px); }
+.board { width: min(100%, 640px); }
+
+.panel-card { display: flex; flex-direction: column; gap: 22px; padding: 24px; min-height: 420px; }
+.label { display: block; margin-bottom: 8px; color: var(--muted); font-size: 0.78rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
+.status { padding: 14px 16px; border-radius: 16px; background: rgba(255, 255, 255, 0.07); font-weight: 800; }
+.status.ready { color: var(--accent); }
+.status.thinking { color: #ffd166; }
+.status.error { color: var(--danger); }
+
+.status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.status-grid > div { padding: 16px; border-radius: 18px; background: rgba(255, 255, 255, 0.055); }
+
+.log-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+h2 { margin: 0; font-size: 1.15rem; }
+.move-log {
+  flex: 1;
+  min-height: 220px;
+  max-height: 420px;
+  margin: 0;
+  padding: 14px 18px 14px 40px;
+  overflow-y: auto;
+  border-radius: 18px;
+  background: rgba(0, 0, 0, 0.24);
+  color: #dce6f6;
+  line-height: 1.9;
+}
+.move-log li::marker { color: var(--accent-2); font-weight: 900; }
+
+.primary-button,
+.ghost-button {
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 900;
+  transition: transform 160ms ease, opacity 160ms ease, box-shadow 160ms ease;
+}
+.primary-button {
+  flex: 0 0 auto;
+  padding: 14px 22px;
+  color: #04110b;
+  background: linear-gradient(135deg, var(--accent), #b4ffd4);
+  box-shadow: 0 12px 32px rgba(101, 228, 163, 0.28);
+}
+.ghost-button { padding: 9px 13px; color: var(--text); background: rgba(255, 255, 255, 0.1); }
+.primary-button:hover,
+.ghost-button:hover { transform: translateY(-1px); opacity: 0.94; }
+.primary-button:disabled { cursor: not-allowed; opacity: 0.55; transform: none; }
+
+@media (max-width: 900px) {
+  .hero-card { align-items: flex-start; flex-direction: column; }
+  .game-layout { grid-template-columns: 1fr; padding: 14px; }
+  .panel-card { min-height: auto; }
+}
+
+@media (max-width: 520px) {
+  .app-shell { width: min(100% - 18px, 1180px); padding: 12px 0; }
+  .hero-card { padding: 20px; border-radius: 22px; }
+  .status-grid { grid-template-columns: 1fr; }
+  .move-log { max-height: 280px; }
+}
