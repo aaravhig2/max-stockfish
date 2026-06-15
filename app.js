@@ -132,7 +132,7 @@
       draggable: true,
       position: 'start',
       // Resolved: Using the official high-resolution image directory
-      pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
+      pieceTheme: './img/chesspeices/wikipedia/{piece}.png',
       onDragStart,
       onDrop,
       onSnapEnd
