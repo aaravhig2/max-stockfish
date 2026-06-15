@@ -143,11 +143,11 @@
 
   function initializeEngine() {
     try {
-      engine = new Worker('stockfish.js');
+      engine = new Worker('https://cdn.jsdelivr.net/npm/stockfish@18/dist/stockfish-18.js');
       engine.onmessage = handleEngineMessage;
       engine.onerror = () => {
         engineReady = false;
-        setStatus('Could not load local stockfish.js / stockfish.wasm', 'error');
+        setStatus('Could not load Stockfish 18 from CDN', 'error');
       };
       sendEngineCommand('uci');
     } catch (error) {
