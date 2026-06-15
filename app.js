@@ -131,8 +131,9 @@
     board = Chessboard(boardElement, {
       draggable: true,
       position: 'start',
-      // Resolved: Using the official high-resolution image directory
-      pieceTheme: './img/chesspeices/wikipedia/{piece}.png',
+      // Using local piece images from img/chesspeices/wikipedia directory
+      // For local development, ensure you run a local server (see README-setup.md)
+      pieceTheme: 'img/chesspeices/wikipedia/{piece}.png',
       onDragStart,
       onDrop,
       onSnapEnd
