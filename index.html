@@ -29,15 +29,17 @@
     </section>
 
     <section class="game-layout" aria-label="Chess game area">
-      <div class="board-card">
-        <div id="board" class="board" aria-label="Interactive chessboard"></div>
-        <div class="eval-bar-container" aria-label="Position evaluation">
-          <div class="eval-bar">
-            <div id="evalFill" class="eval-fill" style="width: 50%;"></div>
+      <div class="board-wrapper">
+        <div class="eval-bar-vertical" aria-label="Position evaluation">
+          <div class="eval-bar-white">
+            <div id="evalBarWhite" class="eval-segment"></div>
           </div>
-          <div class="eval-text">
-            <span id="evalScore">0.0</span>
+          <div class="eval-bar-black">
+            <div id="evalBarBlack" class="eval-segment"></div>
           </div>
+        </div>
+        <div class="board-card">
+          <div id="board" class="board" aria-label="Interactive chessboard"></div>
         </div>
       </div>
 
@@ -53,8 +55,8 @@
             <strong id="turnIndicator">White</strong>
           </div>
           <div>
-            <span class="label">Search depth</span>
-            <strong>18 ply</strong>
+            <span class="label">Evaluation</span>
+            <strong id="evalDisplay">0.0</strong>
           </div>
         </div>
 
