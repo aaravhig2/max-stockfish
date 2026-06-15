@@ -6,46 +6,19 @@
   const boardElement = document.getElementById('board');
   const statusElement = document.getElementById('engineStatus');
   const turnElement = document.getElementById('turnIndicator');
-  const evalDisplay = document.getElementById('evalDisplay');
   const moveLogElement = document.getElementById('moveLog');
   const newGameButton = document.getElementById('newGameButton');
   const copyFenButton = document.getElementById('copyFenButton');
-  const evalBarWhite = document.getElementById('evalBarWhite');
-  const evalBarBlack = document.getElementById('evalBarBlack');
 
   let game = new Chess();
   let board;
   let engine;
   let engineReady = false;
   let engineThinking = false;
-  let lastEval = 0;
 
   function setStatus(message, state = 'ready') {
     statusElement.textContent = message;
     statusElement.className = `status ${state}`;
-  }
-
-  function updateEvaluationBar(evaluation) {
-    lastEval = evaluation;
-    
-    // Clamp between -5 and +5 for display purposes
-    const clampedEval = Math.max(-5, Math.min(5, evaluation));
-    
-    // Convert to percentage: 0% = black winning, 50% = equal, 100% = white winning
-    const percentage = ((clampedEval + 5) / 10) * 100;
-    
-    // Update white bar (top) - grows when white is winning
-    evalBarWhite.style.height = percentage + '%';
-    // Update black bar (bottom) - grows when black is winning
-    evalBarBlack.style.height = (100 - percentage) + '%';
-    
-    // Format display
-    if (Math.abs(evaluation) >= 15) {
-      evalDisplay.textContent = evaluation > 0 ? '+∞' : '-∞';
-    } else {
-      const sign = evaluation > 0 ? '+' : '';
-      evalDisplay.textContent = sign + (Math.round(evaluation * 10) / 10).toFixed(1);
-    }
   }
 
   function updateTurnIndicator() {
@@ -106,30 +79,6 @@
     const line = String(event.data || '').trim();
     if (!line) return;
 
-    // Parse evaluation from info line
-    if (line.startsWith('info')) {
-      const scoreMatch = line.match(/score (cp|mate) (-?\d+)/);
-      if (scoreMatch) {
-        let evalValue = 0;
-        
-        if (scoreMatch[1] === 'cp') {
-          // Convert centipawns to pawns
-          evalValue = parseInt(scoreMatch[2]) / 100;
-        } else if (scoreMatch[1] === 'mate') {
-          // Mate score
-          const mateIn = parseInt(scoreMatch[2]);
-          evalValue = mateIn > 0 ? 20 : -20;
-        }
-        
-        // Negate evaluation for black's perspective
-        if (game.turn() === 'b') {
-          evalValue = -evalValue;
-        }
-        
-        updateEvaluationBar(evalValue);
-      }
-    }
-
     if (line === 'uciok') {
       sendEngineCommand('isready');
       return;
@@ -148,7 +97,7 @@
   }
 
   function describeGameOver() {
-    if (game.in_checkmate()) return `Checkmate — ${game.turn() === 'w' ? 'Black' : 'White'} wins`;
+    if (game.in_checkmate()) return `Checkmate \u2014 ${game.turn() === 'w' ? 'Black' : 'White'} wins`;
     if (game.in_stalemate()) return 'Draw by stalemate';
     if (game.in_threefold_repetition()) return 'Draw by threefold repetition';
     if (game.insufficient_material()) return 'Draw by insufficient material';
@@ -196,9 +145,8 @@
     try {
       engine = new Worker('https://cdn.jsdelivr.net/npm/stockfish@18/dist/stockfish-18.js');
       engine.onmessage = handleEngineMessage;
-      engine.onerror = (error) => {
+      engine.onerror = () => {
         engineReady = false;
-        console.error('Engine error:', error);
         setStatus('Could not load Stockfish 18 from CDN', 'error');
       };
       sendEngineCommand('uci');
@@ -213,7 +161,6 @@
     sendEngineCommand('stop');
     sendEngineCommand('ucinewgame');
     sendEngineCommand('isready');
-    updateEvaluationBar(0);
     refreshUi();
     setStatus(engineReady ? 'Your turn' : 'Loading Stockfish...', engineReady ? 'ready' : 'thinking');
   }
@@ -233,6 +180,5 @@
 
   initializeBoard();
   initializeEngine();
-  updateEvaluationBar(0);
   refreshUi();
 })();
