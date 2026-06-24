@@ -15,6 +15,7 @@
   let engine;
   let engineReady = false;
   let engineThinking = false;
+  let usingFallbackEngine = false;
 
   function setStatus(message, state = 'ready') {
     statusElement.textContent = message;
@@ -56,6 +57,59 @@
     if (engine) engine.postMessage(command);
   }
 
+  function absoluteAssetUrl(path) {
+    return new URL(path, document.baseURI).href;
+  }
+
+  function verboseMoveToUci(move) {
+    return `${move.from}${move.to}${move.promotion || ''}`;
+  }
+
+  function createFallbackEngine() {
+    let fallbackTimer;
+
+    return {
+      postMessage(command) {
+        const line = String(command || '').trim();
+
+        if (line === 'uci') {
+          window.setTimeout(() => handleEngineMessage({ data: 'uciok' }), 0);
+          return;
+        }
+        if (line === 'isready') {
+          window.setTimeout(() => handleEngineMessage({ data: 'readyok' }), 0);
+          return;
+        }
+        if (line === 'stop') {
+          window.clearTimeout(fallbackTimer);
+          engineThinking = false;
+          return;
+        }
+        if (line.startsWith('go')) {
+          window.clearTimeout(fallbackTimer);
+          fallbackTimer = window.setTimeout(() => {
+            const legalMoves = game.moves({ verbose: true });
+            const move = legalMoves[Math.floor(Math.random() * legalMoves.length)];
+            handleEngineMessage({ data: `bestmove ${move ? verboseMoveToUci(move) : '(none)'}` });
+          }, 250);
+        }
+      },
+      terminate() {
+        window.clearTimeout(fallbackTimer);
+      }
+    };
+  }
+
+  function startFallbackEngine(reason) {
+    if (engine && typeof engine.terminate === 'function') engine.terminate();
+    usingFallbackEngine = true;
+    engineReady = false;
+    engineThinking = false;
+    engine = createFallbackEngine();
+    setStatus(reason, 'thinking');
+    sendEngineCommand('uci');
+  }
+
   function requestEngineMove() {
     if (!engineReady || engineThinking || game.game_over()) return;
     engineThinking = true;
@@ -70,7 +124,7 @@
     const move = game.move({
       from: bestMove.slice(0, 2),
       to: bestMove.slice(2, 4),
-      promotion: bestMove.slice(4, 5) || 'q'
+      promotion: bestMove.slice(4, 5) || undefined
     });
     if (move) refreshUi();
   }
@@ -85,7 +139,7 @@
     }
     if (line === 'readyok') {
       engineReady = true;
-      setStatus('Your turn', 'ready');
+      setStatus(usingFallbackEngine ? 'Fallback engine ready (random legal moves)' : 'Your turn', 'ready');
       return;
     }
     if (line.startsWith('bestmove')) {
@@ -142,16 +196,27 @@
   }
 
   function initializeEngine() {
+    if (typeof Worker !== 'function') {
+      startFallbackEngine('Web Workers unavailable; using fallback engine');
+      return;
+    }
+
     try {
-      engine = new Worker('https://cdn.jsdelivr.net/npm/stockfish@18/dist/stockfish-18.js');
+      // Resolve from document.baseURI so GitHub Pages project URLs such as
+      // https://username.github.io/repo-name/ load /repo-name/stockfish.js
+      // instead of accidentally resolving from the domain root or a CDN worker
+      // context that cannot see our local stockfish.wasm file.
+      const stockfishUrl = absoluteAssetUrl('stockfish.js');
+      engine = new Worker(stockfishUrl);
       engine.onmessage = handleEngineMessage;
-      engine.onerror = () => {
-        engineReady = false;
-        setStatus('Could not load Stockfish 18 from CDN', 'error');
+      engine.onerror = (event) => {
+        console.error('Stockfish worker failed to load', event);
+        startFallbackEngine('Stockfish worker failed; using fallback engine');
       };
       sendEngineCommand('uci');
     } catch (error) {
-      setStatus('Web Workers are unavailable in this browser context', 'error');
+      console.error('Stockfish worker could not be created', error);
+      startFallbackEngine('Web Worker creation failed; using fallback engine');
     }
   }
 
@@ -162,7 +227,7 @@
     sendEngineCommand('ucinewgame');
     sendEngineCommand('isready');
     refreshUi();
-    setStatus(engineReady ? 'Your turn' : 'Loading Stockfish...', engineReady ? 'ready' : 'thinking');
+    setStatus(engineReady ? (usingFallbackEngine ? 'Fallback engine ready (random legal moves)' : 'Your turn') : 'Loading Stockfish...', engineReady ? 'ready' : 'thinking');
   }
 
   async function copyFen() {
